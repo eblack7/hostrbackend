@@ -1,4 +1,4 @@
-# Getting started with Django on Google Cloud Platform on App Engine Standard
+# Hostr Backend
 
 This repository is an example of how to run a [Django](https://www.djangoproject.com/) 
 app on Google App Engine Flexible Environment. It uses the 
