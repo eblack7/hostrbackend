@@ -16,3 +16,11 @@ class User(models.Model):
     phone_number = models.CharField(max_length=20)
     fb_access_token = models.TextField()
     date_created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date_created']
+
+    def __str__(self):
+        return self.full_name
+    def __repr__(self):
+        return self.full_name
