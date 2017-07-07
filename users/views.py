@@ -41,9 +41,13 @@ def signUp(request):
             return HttpResponse(serializer.serialize("json", user)[1:-1],
                                 content_type="application/json")
         except MultipleObjectsReturned:
-            user = User.objects.filter(email=request.POST.get('email'))[0]
+            user = User.objects.filter(email=request.POST.get('email'))
+            if len(user) > 1:
+                user = user[0]
             return HttpResponse(serializers.serialize("json", user)[1:-1],
                                 content_type="application/json")
+        except ObjectDoesNotExist:
+            pass
 
 
         full_name = request.POST.get('name')
@@ -70,16 +74,16 @@ def updateProfile(request):
     #print request.body
     if request.method == 'POST':
         # update_payload = json.loads(request.body)
-        update_paylod = request.POST.get('update_queries')
+        update_payload = request.POST
         try:
-            user = User.objects.get(pk=update_payload['id'])
+            user = User.objects.get(pk=update_payload.get('user_id'))
             #update all user attributes
             user.username = update_payload['username']
             user.full_name = update_payload['full_name']
             user.email = update_payload['email']
             user.profile_picture_url = update_payload['profile_picture_url']
             user.description = update_payload['description']
-            user.phone_number = update_payload['phone_number']
+            user.profile_link = update_payload['profile_link']
             user.save()
             # Returning a confirmation if update was successful.
             return HttpResponse(json.dumps({
@@ -93,6 +97,6 @@ def updateProfile(request):
             content_type="application/json")
     else:
         return HttpResponse(json.dumps({
-        'response': 'Only POST request are allowed for this route.'
+        'error': 'invalid request type'
         }),
         content_type="application/json")
