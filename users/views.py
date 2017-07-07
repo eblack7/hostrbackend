@@ -84,7 +84,7 @@ def updateProfile(request):
             user.profile_picture_url = update_payload['profile_picture_url']
             user.description = update_payload['description']
             user.profile_link = update_payload['profile_link']
-            user.phone_number = update_payload['phone_nummber']
+            user.phone_number = update_payload['phone_number']
             user.save()
             # Returning a confirmation if update was successful.
             return HttpResponse(json.dumps({
