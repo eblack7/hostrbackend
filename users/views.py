@@ -38,7 +38,7 @@ def signUp(request):
             user = User.objects.get(email=request.POST.get('email'))
             user.fb_access_token = request.POST.get('fb_access_token')
             user.save()
-            return HttpResponse(serializer.serialize("json", user)[1:-1],
+            return HttpResponse(serializers.serialize("json", user)[1:-1],
                                 content_type="application/json")
         except MultipleObjectsReturned:
             user = User.objects.filter(email=request.POST.get('email'))
