@@ -17,9 +17,11 @@ from django.contrib import admin
 
 from polls.views import index
 import users
+import events
 
 urlpatterns = [
     url(r'^$', index),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^users/', include('users.urls')),
+    url(r'^events/', include('events.urls')),
 ]

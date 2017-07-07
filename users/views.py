@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
 from django.shortcuts import render
 from django.http import HttpResponse
 import json
 from .models import User
 from django.core import serializers
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 from .models import User
@@ -34,6 +33,19 @@ def signUp(request):
     :return HttpResponse:
     '''
     if request.method == 'POST':
+        #check if email already exists
+        try:
+            user = User.objects.get(email=request.POST.get('email'))
+            user.fb_access_token = request.POST.get('fb_access_token')
+            user.save()
+            return HttpResponse(serializer.serialize("json", user)[1:-1],
+                                content_type="application/json")
+        except MultipleObjectsReturned:
+            user = User.objects.filter(email=request.POST.get('email'))[0]
+            return HttpResponse(serializers.serialize("json", user)[1:-1],
+                                content_type="application/json")
+
+
         full_name = request.POST.get('name')
         profile_picture_url = request.POST.get('profile_picture_url')
         email = request.POST.get('email')
