@@ -14,9 +14,9 @@ class User(models.Model):
     birthday = models.DateField()
     gender = models.CharField(max_length=10)
     description = models.TextField(default='', null=True, blank=True)
-    phone_number = models.CharField(max_length=20)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
     fb_access_token = models.TextField()
-    profile_link = models.CharField(max_length=2048, default='')
+    profile_link = models.CharField(max_length=2048, default='', null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
