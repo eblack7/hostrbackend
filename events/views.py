@@ -8,10 +8,12 @@ from users.models import User
 import json
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
+from django.core import serializers
+from utils import EventSerializer
 # Create your views here.
 
 DATE_FORMATTER = "%Y-%m-%d %H:%M:%S +0000"
-
+eventSerializer = EventSerializer()
 def index(request):
     return HttpResponse("Events app.")
 
@@ -46,3 +48,11 @@ def createEvent(request):
         'error': 'invalid request type'
         }),
         content_type="application/json")
+
+
+@csrf_exempt
+def eventFeed(request):
+    user_id = request.POST.get('user_id')
+    events = Event.objects.all()
+    return HttpResponse(EventSerializer.serialize(events),
+                        content_type="application/json")
