@@ -14,8 +14,11 @@ from utils import EventSerializer
 
 DATE_FORMATTER = "%Y-%m-%d %H:%M:%S +0000"
 eventSerializer = EventSerializer()
+
+
 def index(request):
     return HttpResponse("Events app.")
+
 
 @csrf_exempt
 def createEvent(request):
