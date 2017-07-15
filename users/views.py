@@ -8,7 +8,7 @@ from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
-from .models import User
+from .models import User, FCMToken
 
 
 # Create your views here.
@@ -33,7 +33,9 @@ def signUp(request):
     :return HttpResponse:
     '''
     if request.method == 'POST':
-        #check if email already exists
+        # check if email already exists
+        # use django get or create instance here
+
         try:
             user = User.objects.get(email=request.POST.get('email'))
             user.fb_access_token = request.POST.get('fb_access_token')
@@ -100,4 +102,24 @@ def updateProfile(request):
         return HttpResponse(json.dumps({
         'error': 'invalid request type'
         }),
+        content_type="application/json")
+
+
+@csrf_exempt
+def get_or_create_fcm_tokens(request):
+    if request.method == 'POST':
+        Id = request.POST.get('id')
+        device_token = request.POST.get('device_token')
+        fcm_token = FCMToken.objects.get_or_create(user_id=Id)
+        fcm_token[0].device_token = device_token
+        fcm_token[0].save()
+        return HttpResponse(json.dumps({
+            "id": fcm_token[0].user.pk,
+            "device_token": fcm_token[0].device_token
+            }),
+        content_type="application/json")
+    else:
+        return HttpResponse(json.dumps({
+            "error": "invalid request type"
+            }),
         content_type="application/json")

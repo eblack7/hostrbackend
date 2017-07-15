@@ -17,6 +17,7 @@ class EventSerializer():
         if hasattr(event, '__iter__') is False:
             #its a single object
             output = dict()
+            output['id'] = event.pk
             output['event_name'] = str(event.event_name)
             output['hoster'] = json.loads(serializers.serialize("json", [User.objects.get(pk=event.hoster)])[1:-1])
             output['from_timestamp'] = datetime.strftime(event.from_timestamp, DATE_FORMATTER)
@@ -36,6 +37,7 @@ class EventSerializer():
         del event
         for event in events:
             output = dict()
+            output['id'] = event.pk
             output['event_name'] = str(event.event_name)
             output['hoster'] = json.loads(serializers.serialize("json", [User.objects.get(pk=event.hoster.id)])[1:-1])
             output['from_timestamp'] = datetime.strftime(event.from_timestamp, DATE_FORMATTER)

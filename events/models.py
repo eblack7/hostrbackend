@@ -22,3 +22,12 @@ class Event(models.Model):
         return self.event_name
     def __repr__(self):
         return self.event_name
+
+
+
+class Attendee(models.Model):
+    event = models.ForeignKey('Event')
+    user = models.ForeignKey('users.User')
+    attending = models.BooleanField()
+    chat_notification = models.BooleanField(default=True)
+    timestamp = models.DateTimeField(auto_now_add=True)

@@ -26,3 +26,7 @@ class User(models.Model):
         return self.full_name
     def __repr__(self):
         return self.full_name
+
+class FCMToken(models.Model):
+    user = models.ForeignKey('User')
+    device_token = models.TextField(null=True, blank=True)
