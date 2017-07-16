@@ -85,10 +85,22 @@ def chat_notification(request):
             registrationIds.append(
                 FCMToken.objects.get(user_id=attendee.user.pk).device_token)
 
+        #additional data
+        data = {
+            "message": request.POST.get('text'),
+            "sender_id": request.POST.get('sender_id'),
+            "sender_display_name": request.POST.get('sender_display_name'),
+            "event_id": int(request.POST.get('event_id')),
+            "timestamp": request.POST.get('timestamp'),
+            "text": request.POST.get('text'),
+            "type": "group_message"
+        }
         result = push_service.notify_multiple_devices(registration_ids=registrationIds,
                                                     message_title=messageTitle,
                                                     message_body=messageBody,
-                                                    sound="job-done.m4r")
+                                                    sound="job-done.m4r",
+                                                    badge=1,
+                                                    data_message=data)
         return HttpResponse(json.dumps({
             "response": True
             }),
