@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 import json
 from .models import User
@@ -8,7 +8,7 @@ from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
-from .models import User, FCMToken
+from .models import User, FCMToken, Follower
 
 
 # Create your views here.
@@ -56,13 +56,13 @@ def signUp(request):
         profile_picture_url = request.POST.get('profile_picture_url')
         email = request.POST.get('email')
         gender = request.POST.get('gender')
-        birthday = datetime.strptime(request.POST.get('birthday'), '%m/%d/%Y').date()
+        #birthday = datetime.strptime(request.POST.get('birthday'), '%m/%d/%Y').date()
         phone_number = ""
         username = email.split('@')[0]
 
         new_user = User(username=username, full_name=full_name, email=email,
                         profile_picture_url=profile_picture_url,
-                        birthday=birthday, gender=gender, phone_number=phone_number,
+                        gender=gender, phone_number=phone_number,
                         fb_access_token=request.POST.get('fb_access_token'))
         new_user.save()
         return HttpResponse(serializers.serialize("json", [new_user])[1:-1],
@@ -77,6 +77,7 @@ def updateProfile(request):
     if request.method == 'POST':
         # update_payload = json.loads(request.body)
         update_payload = request.POST
+        print (update_payload)
         try:
             user = User.objects.get(pk=update_payload.get('user_id'))
             #update all user attributes
@@ -122,4 +123,66 @@ def get_or_create_fcm_tokens(request):
         return HttpResponse(json.dumps({
             "error": "invalid request type"
             }),
+        content_type="application/json")
+
+
+@csrf_exempt
+def follow(request):
+    if request.method == 'POST':
+        user_id = request.POST.get("user_id")
+        friend_id = request.POST.get("friend_id")
+        Follower.objects.create(user_id=user_id, friend_id=friend_id)
+        return HttpResponse(json.dumps({
+            "response": True
+        }),
+            content_type="application/json")
+    else:
+        return HttpResponse(json.dumps({
+            "error": "invalid request type"
+        }),
+            content_type="application/json")
+
+@csrf_exempt
+def is_follower(request):
+    user_id = request.GET.get("user_id")
+    friend_id = request.GET.get("friend_id")
+    follower = get_object_or_404(Follower, user_id=user_id, friend_id=friend_id)
+    return HttpResponse(serializers.serialize("json", [follower]),
+                        content_type="application/json")
+
+@csrf_exempt
+def unfollow(request):
+    if request.method == 'POST':
+        user_id = request.POST.get("user_id")
+        friend_id = request.POST.get("friend_id")
+        Follower.objects.get(user_id=user_id, friend_id=friend_id).delete()
+        return HttpResponse(json.dumps({
+            "response": True
+        }),
+            content_type="application/json")
+
+
+@csrf_exempt
+def get_score(request):
+    user_id = request.GET.get("user_id")
+    score = User.objects.get(pk=user_id).score
+    return HttpResponse(json.dumps({
+        "score": score
+    }),
+    content_type="application/json")
+
+@csrf_exempt
+def get_user_data(request):
+    user = User.objects.get(pk=request.GET.get("id"))
+    return HttpResponse(serializers.serialize("json", [user])[1:-1],
+                        content_type="application/json")
+
+@csrf_exempt
+def get_stats(request):
+    following = Follower.objects.filter(user_id=request.GET.get("id")).count()
+    followers = Follower.objects.filter(friend_id=request.GET.get("id")).count()
+    return HttpResponse(json.dumps({
+        "followers": followers,
+        "following": following
+    }),
         content_type="application/json")
