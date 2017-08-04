@@ -69,6 +69,57 @@ def createEvent(request):
         }),
             content_type="application/json")
 
+@csrf_exempt
+def update_event(request):
+    if request.method == 'POST':
+        event = None
+        try:
+            event = Event.objects.get(pk=request.POST.get('event_id'))
+        except:
+            return HttpResponse(json.dumps({
+            "error": "event not found"
+        }),
+        content_type="application/json")
+
+        print (request.POST.get)
+        event_name = request.POST.get('event_name')
+        hoster = User.objects.get(pk=request.POST.get('hoster_info'))
+        from_timestamp = datetime.strptime(request.POST.get('start_timestamp'),
+                                           DATE_FORMATTER)
+        to_timestamp = datetime.strptime(request.POST.get('end_timestamp'),
+                                         DATE_FORMATTER)
+        price = float(request.POST.get('price'))
+        currency = request.POST.get('currency')
+        address = request.POST.get('address')
+        latitude = float(request.POST.get('latitude'))
+        longitude = float(request.POST.get('longitude'))
+        event_image_url = request.POST.get('image_url')
+        
+        
+        event.event_name = event_name
+        event.from_timestamp = from_timestamp
+        event.to_timestamp = to_timestamp
+        event.price = price
+        event.currency = currency
+        event.latitude = latitude
+        event.longitude = longitude
+        event.event_image_url = event_image_url
+        event.save()
+        return HttpResponse(json.dumps({
+            "response": True
+        }), content_type="application/json")
+
+
+@csrf_exempt
+def delete_event(request):
+    if request.method == 'POST':
+        event_id = request.POST.get('event_id')
+        event = Event.objects.get(pk=event_id).delete()
+        return HttpResponse(json.dumps({
+        "response": True
+        }),
+        content_type="application/json")
+
 
 @csrf_exempt
 def eventFeed(request):

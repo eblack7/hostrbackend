@@ -15,4 +15,6 @@ urlpatterns = [
     url(r'new_send_notif/', views.new_send_notification),
     url(r'my_events/', views.my_events),
     url(r'list_attendees/', views.list_attendees),
+    url(r'update_event', views.update_event),
+    url(r'delete_event', views.delete_event),
 ]
