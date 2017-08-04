@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
+"""
+All django events views exist in this file
+"""
 from __future__ import unicode_literals
 
-import json, os, base64, pdb
+import json
+import os
+import base64
+import pdb
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import Event, Attendee, ChecklistItem
-from users.models import User, FCMToken
+from users.models import User, FCMToken, Follower
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.core import serializers
@@ -18,7 +24,6 @@ from requests import get, post
 # Create your views here.
 
 DATE_FORMATTER = "%Y-%m-%d %H:%M:%S +0000"
-eventSerializer = EventSerializer()
 
 FIREBASE_API_KEY = "AAAAVY9gsF8:APA91bFg2vtKqi2NyVG6O-bPBnx98R_snzeJEbTMIJnddO" \
                    "tg3jtCBHztQKYgY6o1LCX1FHK-fZrfWcowWQgOzDt30EwEpbPJg-YrER" \
@@ -27,12 +32,16 @@ NOTIFICATION_SERVER = "http://localhost:8080/send_notif"
 
 
 if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
-    push_service = FCMNotification(api_key=FIREBASE_API_KEY, env='app_engine')
+    PUSH_SERVICE = FCMNotification(api_key=FIREBASE_API_KEY, env='app_engine')
 else:
-    push_service = FCMNotification(api_key=FIREBASE_API_KEY)
+    PUSH_SERVICE = FCMNotification(api_key=FIREBASE_API_KEY)
 
 
 def index(request):
+    """
+    Index view
+    """
+    print request
     return HttpResponse("Events app.")
 
 
@@ -154,7 +163,7 @@ def chat_notification(request):
             "text": request.POST.get('text'),
             "type": "group_message"
         }
-        result = push_service.notify_multiple_devices(registration_ids=registrationIds,
+        result = PUSH_SERVICE.notify_multiple_devices(registration_ids=registrationIds,
                                                       message_title=messageTitle,
                                                       message_body=messageBody,
                                                       sound="job-done.m4r",
@@ -377,3 +386,58 @@ def list_attendees(request):
             json.loads(serializers.serialize("json", [attendee.user])[1:-1])
         )
     return HttpResponse(json.dumps(response), content_type="application/json")
+
+
+@csrf_exempt
+def list_invitees(request):
+    """
+    this view lists all the invitees that could be possible for
+    given user """
+    if request.method == 'GET':
+        event_id = request.GET.get("event_id")
+        user_id = request.GET.get("user_id")
+
+        invitees = []
+        # Get all the followers and following people of User object
+        followers = Follower.objects.filter(friend_id=user_id)
+        if followers.count() > 0:
+            for follower in followers:
+                invitees.append(
+                    json.loads(serializers.serialize("json", [follower.user])[1:-1])
+                )
+        # followings = Follower.objects.filter(user_id=user_id)
+        # for i, following in enumerate(followings):
+        #     if following in followers:
+        #         del followings[i]
+        
+        # for following in followings:
+        #     invitees.append(
+        #         json.loads(serializers.serialize("json", [following.friend])[1:-1])
+        #     )
+
+        return HttpResponse(json.dumps(invitees), content_type="application/json")
+    
+    else:
+        return HttpResponse(json.dumps({
+    "error": "ivalid request type"
+    }),
+    content_type="application/json")
+
+
+@csrf_exempt
+def invite_connection(request):
+    if request.method == 'POST':
+        payload = json.loads(request.body)
+        event_id = payload['event_id']
+        event = Event.objects.get(pk=event_id)
+        messageBody = "New Invite: ~" + event.event_name
+        tokens = []
+        for user_id in payload["selected_ids"]:
+            token = FCMToken.objects.get(user_id=user_id).device_token
+            tokens.append(token)
+
+        result = PUSH_SERVICE.notify_multiple_devices(registration_ids=tokens,
+                                                      message_body=messageBody,
+                                                      sound="job-done.m4r",
+                                                      badge=1)
+        return HttpResponse(json.dumps({"response": True}), content_type="application/json")

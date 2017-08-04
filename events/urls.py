@@ -17,4 +17,6 @@ urlpatterns = [
     url(r'list_attendees/', views.list_attendees),
     url(r'update_event', views.update_event),
     url(r'delete_event', views.delete_event),
+    url(r'list_invitees/', views.list_invitees),
+    url(r'invite_connections/', views.invite_connection),
 ]
