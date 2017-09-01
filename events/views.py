@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-All django events views exist in this file
-"""
 from __future__ import unicode_literals
 
-import json
-import os
-import base64
-import pdb
+import json, os, base64, pdb
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import Event, Attendee, ChecklistItem
@@ -24,6 +18,7 @@ from requests import get, post
 # Create your views here.
 
 DATE_FORMATTER = "%Y-%m-%d %H:%M:%S +0000"
+eventSerializer = EventSerializer()
 
 FIREBASE_API_KEY = "AAAAVY9gsF8:APA91bFg2vtKqi2NyVG6O-bPBnx98R_snzeJEbTMIJnddO" \
                    "tg3jtCBHztQKYgY6o1LCX1FHK-fZrfWcowWQgOzDt30EwEpbPJg-YrER" \
@@ -32,16 +27,12 @@ NOTIFICATION_SERVER = "http://localhost:8080/send_notif"
 
 
 if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
-    PUSH_SERVICE = FCMNotification(api_key=FIREBASE_API_KEY, env='app_engine')
+    push_service = FCMNotification(api_key=FIREBASE_API_KEY, env='app_engine')
 else:
-    PUSH_SERVICE = FCMNotification(api_key=FIREBASE_API_KEY)
+    push_service = FCMNotification(api_key=FIREBASE_API_KEY)
 
 
 def index(request):
-    """
-    Index view
-    """
-    print request
     return HttpResponse("Events app.")
 
 
@@ -163,7 +154,7 @@ def chat_notification(request):
             "text": request.POST.get('text'),
             "type": "group_message"
         }
-        result = PUSH_SERVICE.notify_multiple_devices(registration_ids=registrationIds,
+        result = push_service.notify_multiple_devices(registration_ids=registrationIds,
                                                       message_title=messageTitle,
                                                       message_body=messageBody,
                                                       sound="job-done.m4r",
@@ -347,6 +338,17 @@ def get_items(request):
 
 
 @csrf_exempt
+def deleteItem(request):
+    """
+    deletes a specific checklist item
+    """
+    if request.method == 'POST':
+        item_id = request.POST.get('item_id')
+        item = ChecklistItem.objects.get(pk=item_id)
+        item.delete()
+        return HttpResponse(json.dumps({'response': True}), content_type="application/json")
+
+@csrf_exempt
 def new_send_notification(request):
     device_tokens = list()
     for token in FCMToken.objects.filter(user_id=6):
@@ -436,7 +438,7 @@ def invite_connection(request):
             token = FCMToken.objects.get(user_id=user_id).device_token
             tokens.append(token)
 
-        result = PUSH_SERVICE.notify_multiple_devices(registration_ids=tokens,
+        result = push_service.notify_multiple_devices(registration_ids=tokens,
                                                       message_body=messageBody,
                                                       sound="job-done.m4r",
                                                       badge=1)
