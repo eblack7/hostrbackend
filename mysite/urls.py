@@ -25,5 +25,6 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^users/', include('users.urls')),
     url(r'^events/', include('events.urls')),
+    url(r'^search/', include('search.urls')),
     url(r'^privacy/', views.privacy),
 ]

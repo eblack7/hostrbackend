@@ -17,6 +17,7 @@ class Event(models.Model):
     latitude = models.DecimalField(max_digits=19, decimal_places=10)
     longitude = models.DecimalField(max_digits=19, decimal_places=10)
     event_image_url = models.TextField()
+    is_private = models.BooleanField(default=False)
     create_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -54,3 +55,16 @@ class ChecklistItem(models.Model):
 
     def __repr__(self):
         return b64decode(self.item_name)
+
+class Invite(models.Model):
+    event = models.ForeignKey('Event', related_name="invite_event")
+    user = models.ForeignKey('users.User', related_name="invite_user")
+    sent_by = models.ForeignKey('users.User', related_name="invite_sent_by")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+    def __str__(self):
+        return "Invite: {} from {}".format(self.user.full_name, self.sent_by.full_name)
+
+    class Meta:
+        ordering = ['-created_at']

@@ -13,6 +13,7 @@ from .utils import EventSerializer
 from pyfcm import FCMNotification
 from django.shortcuts import get_object_or_404
 from django.db.models import F
+from django.utils import timezone
 from requests import get, post
 
 # Create your views here.
@@ -51,6 +52,7 @@ def createEvent(request):
         address = request.POST.get('address')
         latitude = float(request.POST.get('latitude'))
         longitude = float(request.POST.get('longitude'))
+        is_private = bool(request.POST.get('is_private'))
         event_image_url = request.POST.get('image_url')
         event = Event.objects.create(event_name=event_name, hoster=hoster,
                              from_timestamp=from_timestamp,
@@ -59,7 +61,8 @@ def createEvent(request):
                              currency=currency,
                              address=address, latitude=latitude,
                              longitude=longitude,
-                             event_image_url=event_image_url)
+                             event_image_url=event_image_url,
+                             is_private=is_private)
         Attendee.objects.create(event=event, user=hoster, attending=True)
         return HttpResponse(json.dumps({'response': True}),
                             content_type="application/json")
@@ -94,6 +97,7 @@ def update_event(request):
         latitude = float(request.POST.get('latitude'))
         longitude = float(request.POST.get('longitude'))
         event_image_url = request.POST.get('image_url')
+        is_private = request.POST.get('is_private')
         
         
         event.event_name = event_name
@@ -104,6 +108,7 @@ def update_event(request):
         event.latitude = latitude
         event.longitude = longitude
         event.event_image_url = event_image_url
+        event.is_private = is_private
         event.save()
         return HttpResponse(json.dumps({
             "response": True
@@ -124,7 +129,9 @@ def delete_event(request):
 @csrf_exempt
 def eventFeed(request):
     # user_id = request.POST.get('user_id')
-    events = Event.objects.all()
+    # getting all events except the ones that are over
+    now = timezone.now()
+    events = Event.objects.exclude(from_timestamp__lt=now).exclude(is_private=True).order_by('-from_timestamp', 'to_timestamp')
     return HttpResponse(EventSerializer.serialize(events),
                         content_type="application/json")
 
@@ -428,18 +435,32 @@ def list_invitees(request):
 
 @csrf_exempt
 def invite_connection(request):
+    """
+    request-params:
+    event_id,
+    invite_user_id,
+    invite_sent_by
+    """
     if request.method == 'POST':
         payload = json.loads(request.body)
         event_id = payload['event_id']
         event = Event.objects.get(pk=event_id)
-        messageBody = "New Invite: ~" + event.event_name
+        try:
+            invite_sent_by = payload['invite_sent_by']
+            invite_sent_by = User.objects.get(pk=invite_sent_by)
+        except:
+            invite_sent_by = event.hoster
+        messageBody = "\'" + event.event_name + "\' from " + invite_sent_by.full_name
         tokens = []
         for user_id in payload["selected_ids"]:
+            # add a new invite object into the database to notify the user of his invites
             token = FCMToken.objects.get(user_id=user_id).device_token
             tokens.append(token)
 
         result = push_service.notify_multiple_devices(registration_ids=tokens,
+                                                      message_title="New Invite",
                                                       message_body=messageBody,
                                                       sound="job-done.m4r",
                                                       badge=1)
         return HttpResponse(json.dumps({"response": True}), content_type="application/json")
+    

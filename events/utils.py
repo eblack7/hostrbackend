@@ -28,6 +28,7 @@ class EventSerializer():
             output['attending'] = int(event.attending)
             output['latitude'] = float(event.latitude)
             output['longitude'] = float(event.longitude)
+            output['is_private'] = event.is_private
             output['event_image_url'] = str(event.event_image_url)
             output['created_at'] = datetime.strftime(event.created_at, DATE_FORMATTER)
             return json.dumps(output)
@@ -48,6 +49,7 @@ class EventSerializer():
             output['attending'] = int(event.attending)
             output['latitude'] = float(event.latitude)
             output['longitude'] = float(event.longitude)
+            output['is_private'] = event.is_private
             output['event_image_url'] = str(event.event_image_url)
             output['created_at'] = datetime.strftime(event.create_at, DATE_FORMATTER)
             output_list.append(output)
