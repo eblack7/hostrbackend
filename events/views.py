@@ -445,11 +445,38 @@ def invite_connection(request):
         payload = json.loads(request.body)
         event_id = payload['event_id']
         event = Event.objects.get(pk=event_id)
+
         try:
             invite_sent_by = payload['invite_sent_by']
             invite_sent_by = User.objects.get(pk=invite_sent_by)
         except:
             invite_sent_by = event.hoster
+
+        # If event is private add the user to the event directly.
+        if event.is_private:
+            private_message_body = 'Added to private event \"{}\" by '\
+                                    '{}'.format(event.event_name,
+                                                invite_sent_by.full_name)
+
+            device_tokens = []
+            for user in payload['selected_ids']:
+                Attendee.objects.create(event=event, user_id=user,
+                                        attending=True)
+
+                # Send a notification confirming invite
+                token = FCMToken.objects.get(user_id=user).device_token
+                device_tokens.append(token)
+
+            push_service.notify_multiple_devices(registration_ids=device_tokens,
+                                                 message_title="New Invite",
+                                                 message_body=private_message_body,
+                                                 sound="job-done.m4r",
+                                                 badge=1)
+
+            return HttpResponse(json.dumps({'response': True}),
+                                content_type="application/json")
+
+
         messageBody = "\'" + event.event_name + "\' from " + invite_sent_by.full_name
         tokens = []
         for user_id in payload["selected_ids"]:
