@@ -463,6 +463,10 @@ def invite_connection(request):
                 Attendee.objects.create(event=event, user_id=user,
                                         attending=True)
 
+                # Updating event with new attendee count
+                event.attending = F('attending') + 1
+                event.save()
+
                 # Send a notification confirming invite
                 token = FCMToken.objects.get(user_id=user).device_token
                 device_tokens.append(token)
