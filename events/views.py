@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import json, os, base64, pdb
+import json
+import os
+import base64
+import pdb
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import Event, Attendee, ChecklistItem
@@ -17,9 +20,9 @@ from django.utils import timezone
 from requests import get, post
 
 # Create your views here.
+eventSerializer = EventSerializer()
 
 DATE_FORMATTER = "%Y-%m-%d %H:%M:%S +0000"
-eventSerializer = EventSerializer()
 
 FIREBASE_API_KEY = "AAAAVY9gsF8:APA91bFg2vtKqi2NyVG6O-bPBnx98R_snzeJEbTMIJnddO" \
                    "tg3jtCBHztQKYgY6o1LCX1FHK-fZrfWcowWQgOzDt30EwEpbPJg-YrER" \
@@ -34,13 +37,19 @@ else:
 
 
 def index(request):
-    return HttpResponse("Events app.")
+    '''
+    Test index route
+    '''
+    return HttpResponse('Events app: {}'.format(request.body))
 
 
 @csrf_exempt
 def createEvent(request):
+    '''
+    This view creates the entire event and saves the instance to the database
+    '''
     if request.method == 'POST':
-        print (request.POST.get)
+        print request.POST.get
         event_name = request.POST.get('event_name')
         hoster = User.objects.get(pk=request.POST.get('hoster_info'))
         from_timestamp = datetime.strptime(request.POST.get('start_timestamp'),
@@ -54,23 +63,29 @@ def createEvent(request):
         longitude = float(request.POST.get('longitude'))
         is_private = bool(request.POST.get('is_private'))
         event_image_url = request.POST.get('image_url')
+
+        # Creating new event
         event = Event.objects.create(event_name=event_name, hoster=hoster,
-                             from_timestamp=from_timestamp,
-                             to_timestamp=to_timestamp,
-                             price=price,
-                             currency=currency,
-                             address=address, latitude=latitude,
-                             longitude=longitude,
-                             event_image_url=event_image_url,
-                             is_private=is_private)
+                                     from_timestamp=from_timestamp,
+                                     to_timestamp=to_timestamp,
+                                     price=price,
+                                     currency=currency,
+                                     address=address, latitude=latitude,
+                                     longitude=longitude,
+                                     event_image_url=event_image_url,
+                                     is_private=is_private)
+
+
+        # Adding the user to his event as an attendee
         Attendee.objects.create(event=event, user=hoster, attending=True)
+
+
         return HttpResponse(json.dumps({'response': True}),
                             content_type="application/json")
+
     else:
-        return HttpResponse(json.dumps({
-            'error': 'invalid request type'
-        }),
-            content_type="application/json")
+        return HttpResponse(json.dumps({'error': 'invalid request type'}),
+                            content_type="application/json")
 
 @csrf_exempt
 def update_event(request):
@@ -103,6 +118,7 @@ def update_event(request):
         event.event_name = event_name
         event.from_timestamp = from_timestamp
         event.to_timestamp = to_timestamp
+        event.address = address
         event.price = price
         event.currency = currency
         event.latitude = latitude
@@ -117,21 +133,31 @@ def update_event(request):
 
 @csrf_exempt
 def delete_event(request):
+    '''
+    request-arguments:
+        event_id
+    '''
     if request.method == 'POST':
         event_id = request.POST.get('event_id')
-        event = Event.objects.get(pk=event_id).delete()
-        return HttpResponse(json.dumps({
-        "response": True
-        }),
-        content_type="application/json")
+        Event.objects.get(pk=event_id).delete()
+        return HttpResponse(json.dumps({"response": True}),
+                            content_type="application/json")
 
 
 @csrf_exempt
-def eventFeed(request):
+def event_feed(request):
+    '''
+    request-arguments:
+        user_id
+    '''
     # user_id = request.POST.get('user_id')
     # getting all events except the ones that are over
+    payload = json.loads(request.body)
+    print 'Feed request: {}'.format(payload)
     now = timezone.now()
-    events = Event.objects.exclude(from_timestamp__lt=now).exclude(is_private=True).order_by('-from_timestamp', 'to_timestamp')
+    events = Event.objects.exclude(from_timestamp__lt=now) \
+                  .exclude(is_private=True) \
+                  .order_by('-from_timestamp', 'to_timestamp')
     return HttpResponse(EventSerializer.serialize(events),
                         content_type="application/json")
 
@@ -139,19 +165,19 @@ def eventFeed(request):
 @csrf_exempt
 def chat_notification(request):
     if request.method == 'POST':
-        eventId = request.POST.get('event_id')
-        messageTitle = request.POST.get('message_title')
-        messageBody = request.POST.get('message_body')
+        event_id = request.POST.get('event_id')
+        message_title = request.POST.get('message_title')
+        message_body = request.POST.get('message_body')
 
         # get registrationIds
         registrationIds = []
-        attendees = Attendee.objects.filter(event_id=eventId,
+        attendees = Attendee.objects.filter(event_id=event_id,
                                             chat_notification=True)
         for attendee in attendees:
             registrationIds.append(
                 FCMToken.objects.get(user_id=attendee.user.pk).device_token)
 
-        # additional data
+        # Additional notification data
         data = {
             "message": request.POST.get('text'),
             "sender_id": request.POST.get('sender_id'),
@@ -161,79 +187,96 @@ def chat_notification(request):
             "text": request.POST.get('text'),
             "type": "group_message"
         }
-        result = push_service.notify_multiple_devices(registration_ids=registrationIds,
-                                                      message_title=messageTitle,
-                                                      message_body=messageBody,
-                                                      sound="job-done.m4r",
-                                                      badge=1,
-                                                      data_message=data)
-        return HttpResponse(json.dumps({
-            "response": True
-        }),
-            content_type="application/json")
+
+        # Sending notification using FCM to all registered devices
+        push_service.notify_multiple_devices(registration_ids=registrationIds,
+                                             message_title=message_title,
+                                             message_body=message_body,
+                                             sound="job-done.m4r",
+                                             badge=1,
+                                             data_message=data)
+
+        return HttpResponse(json.dumps({"response": True}),
+                            content_type="application/json")
+
+
     else:
-        return HttpResponse(json.dumps({
-            "error": "invalid request type"
-        }),
-            content_type="application/json")
+        return HttpResponse(json.dumps({"error": "invalid request type"}),
+                            content_type="application/json")
 
 
 @csrf_exempt
 def is_attendee(request):
-    eventId = request.GET.get('event_id')
-    userId = request.GET.get('user_id')
-    attendee = get_object_or_404(Attendee, event_id=eventId,
-                                 user_id=userId)
-    return HttpResponse(json.dumps({
-        'response': True
-    }),
-        content_type="application/json")
+    '''
+    request-arguments:
+        event_id,
+        user_id
+    '''
+    event_id = request.GET.get('event_id')
+    user_id = request.GET.get('user_id')
+    attendee = get_object_or_404(Attendee, event_id=event_id,
+                                 user_id=user_id)
+
+
+    return HttpResponse(json.dumps({'response': True, \
+                        'attendee': attendee.attending}),
+                        content_type="application/json")
 
 
 @csrf_exempt
 def attend(request):
+    '''
+    request-arguments:
+        event_id,
+        user_id
+    '''
     if request.method == 'POST':
-        eventId = request.POST.get('event_id')
-        userId = request.POST.get('user_id')
-        attendee = Attendee.objects.get_or_create(event_id=eventId,
-                                                  user_id=userId,
+        event_id = request.POST.get('event_id')
+        user_id = request.POST.get('user_id')
+        attendee = Attendee.objects.get_or_create(event_id=event_id,
+                                                  user_id=user_id,
                                                   attending=True)
 
-        # updating number of people going to the event
-        event = Event.objects.get(pk=eventId)
+        # Updating number of people going to the event
+        event = Event.objects.get(pk=event_id)
         event.attending = F('attending') + 1
         event.save()
 
-        user = User.objects.get(pk=userId)
+        # Updating user score and hoster score
+        user = User.objects.get(pk=user_id)
         user.score = F('score') + 1
         user.save()
-        event = Event.objects.get(pk=eventId)
+        event = Event.objects.get(pk=event_id)
         hoster = User.objects.get(pk=event.hoster.pk)
         hoster.score = F('score') + 1
         hoster.save()
 
         return HttpResponse(serializers.serialize("json", [attendee[0]])[1:-1],
                             content_type="application/json")
+
     else:
-        return HttpResponse(json.dumps({
-            "error": "invalid request type"
-        }),
-            content_type="application/json")
+        return HttpResponse(json.dumps({"error": "invalid request type"}),
+                            content_type="application/json")
 
 
 @csrf_exempt
 def cancel_attendee(request):
+    '''
+    request-arguments:
+    event_id,
+    user_id
+    '''
     if request.method == 'POST':
         event_id = request.POST.get('event_id')
         user_id = request.POST.get('user_id')
         event = Event.objects.get(pk=event_id)
         event.attending = F('attending') - 1
         event.save()
-        attendee = Attendee.objects.get(event_id=event_id, user_id=user_id).delete()
-        return HttpResponse(json.dumps({
-            "response": True
-        }),
-            content_type="application/json")
+        Attendee.objects.get(event_id=event_id, user_id=user_id).delete()
+
+
+        return HttpResponse(json.dumps({"response": True}),
+                            content_type="application/json")
 
 
 @csrf_exempt
@@ -247,22 +290,21 @@ def edit_chat_notifications(request):
         @userId (User Model)
         @notifFlag (boolean)
     """
-    eventId = request.GET.get('event_id')
-    userId = request.GET.get('user_id')
-    notifFlag = request.GET.get('notif_flag')
-    if eventId and userId and notifFlag is not None:
-        attendee = Attendee.objects.get(event_id=eventId, user_id=userId)
-        attendee.chat_notification = notifFlag
-        print (attendee.save())
-        return HttpResponse(json.dumps({
-            "response": notifFlag
-        }),
-            content_type="application/json")
+    event_id = request.GET.get('event_id')
+    user_id = request.GET.get('user_id')
+    notif_flag = request.GET.get('notif_flag')
+    if event_id and user_id and notif_flag is not None:
+        attendee = Attendee.objects.get(event_id=event_id, user_id=user_id)
+        attendee.chat_notification = notif_flag
+        print attendee.save()
+
+
+        return HttpResponse(json.dumps({"response": notif_flag}),
+                            content_type="application/json")
+
     else:
-        return HttpResponse(json.dumps({
-            "error": "missing fields"
-        }),
-            content_type="application/json")
+        return HttpResponse(json.dumps({"error": "missing fields"}),
+                            content_type="application/json")
 
 
 @csrf_exempt
@@ -273,17 +315,17 @@ def new_checklist_item(request):
         @itemName
     '''
     if request.method == 'POST':
-        eventId = request.POST.get('event_id')
-        itemName = base64.b64encode(request.POST.get('item_name').encode('utf-8'))
-        new_item = ChecklistItem.objects.create(event_id=eventId,
-                                                item_name=itemName)
+        event_id = request.POST.get('event_id')
+        item_name = base64.b64encode(request.POST.get('item_name').encode('utf-8'))
+        new_item = ChecklistItem.objects.create(event_id=event_id,
+                                                item_name=item_name)
         return HttpResponse(serializers.serialize("json", [new_item])[1:-1],
                             content_type="application/json")
+
+
     else:
-        return HttpResponse(json.dumps({
-            "error": "invalid request type."
-        }),
-            content_type="application/json")
+        return HttpResponse(json.dumps({"error": "invalid request type."}),
+                            content_type="application/json")
 
 
 @csrf_exempt
@@ -295,9 +337,9 @@ def change_checklist_item_state(request):
         @itemFlag (boolean)
     '''
     if request.method == 'POST':
-        print (request.POST)
+        print request.POST
         payload = json.loads(request.body)
-        print (payload)
+        print payload
         item_id = payload["item_id"]
         user_id = payload["user_id"]
         item = ChecklistItem.objects.get(pk=item_id)
@@ -310,15 +352,13 @@ def change_checklist_item_state(request):
         item.item_flag = True if item.item_flag is False else False
         # item.item_flag = itemFlag
         item.save()
-        return HttpResponse(json.dumps({
-            "response": True
-        }),
-            content_type="application/json")
+
+        return HttpResponse(json.dumps({"response": True}),
+                            content_type="application/json")
+
     else:
-        return HttpResponse(json.dumps({
-            "error": "invalid request type."
-        }),
-            content_type="application/json")
+        return HttpResponse(json.dumps({"error": "invalid request type."}),
+                            content_type="application/json")
 
 
 @csrf_exempt
@@ -327,8 +367,8 @@ def get_items(request):
     request-parameters:
         @eventId
     """
-    eventId = request.GET.get('event_id')
-    items = ChecklistItem.objects.filter(event_id=eventId)
+    event_id = request.GET.get('event_id')
+    items = ChecklistItem.objects.filter(event_id=event_id)
     response = []
     for item in items:
         response.append({
@@ -355,25 +395,28 @@ def deleteItem(request):
         item.delete()
         return HttpResponse(json.dumps({'response': True}), content_type="application/json")
 
-@csrf_exempt
-def new_send_notification(request):
-    device_tokens = list()
-    for token in FCMToken.objects.filter(user_id=6):
-        device_tokens.append(token.device_token)
+# @csrf_exempt
+# def new_send_notification(request):
+#     device_tokens = list()
+#     for token in FCMToken.objects.filter(user_id=6):
+#         device_tokens.append(token.device_token)
 
-    message_data = {
-        "device_tokens": device_tokens,
-        "message_payload": {
-            "title": "Message Title",
-            "body": "Message Body"
-        }
-    }
-    # headers = {'Content-type': 'application/json'}
-    try:
-        r = post("http://localhost:8080/send_not", data=json.dumps(message_data))
-    except:
-        return HttpResponse(json.dumps({'error': 'please try later.'}), content_type="application/json")
-    return HttpResponse(r.content)
+#     message_data = {
+#         "device_tokens": device_tokens,
+#         "message_payload": {
+#             "title": "Message Title",
+#             "body": "Message Body"
+#         }
+#     }
+#     # headers = {'Content-type': 'application/json'}
+#     try:
+#         r = post("http://localhost:8080/send_not", data=json.dumps(message_data))
+#     except:
+#         return HttpResponse(json.dumps({'error': 'please try later.'}),
+#                             content_type="application/json")
+
+
+#     return HttpResponse(r.content)
 
 @csrf_exempt
 def my_events(request):
@@ -418,19 +461,17 @@ def list_invitees(request):
         # for i, following in enumerate(followings):
         #     if following in followers:
         #         del followings[i]
-        
+        #    
         # for following in followings:
         #     invitees.append(
         #         json.loads(serializers.serialize("json", [following.friend])[1:-1])
         #     )
 
         return HttpResponse(json.dumps(invitees), content_type="application/json")
-    
+
     else:
-        return HttpResponse(json.dumps({
-    "error": "ivalid request type"
-    }),
-    content_type="application/json")
+        return HttpResponse(json.dumps({"error": "invalid request type."}),
+                            content_type="application/json")
 
 
 @csrf_exempt
@@ -449,7 +490,7 @@ def invite_connection(request):
         try:
             invite_sent_by = payload['invite_sent_by']
             invite_sent_by = User.objects.get(pk=invite_sent_by)
-        except:
+        except KeyError:
             invite_sent_by = event.hoster
 
         # If event is private add the user to the event directly.
@@ -471,27 +512,32 @@ def invite_connection(request):
                 token = FCMToken.objects.get(user_id=user).device_token
                 device_tokens.append(token)
 
-            push_service.notify_multiple_devices(registration_ids=device_tokens,
-                                                 message_title="New Invite",
-                                                 message_body=private_message_body,
-                                                 sound="job-done.m4r",
-                                                 badge=1)
+            # Sending push message to all devices
+            push_service \
+            .notify_multiple_devices(registration_ids=device_tokens,
+                                     message_title="New Invite",
+                                     message_body=private_message_body,
+                                     sound="job-done.m4r",
+                                     badge=1)
 
             return HttpResponse(json.dumps({'response': True}),
                                 content_type="application/json")
 
 
-        messageBody = "\'" + event.event_name + "\' from " + invite_sent_by.full_name
+        message_body = "\'" + event.event_name + "\' from " + invite_sent_by.full_name
         tokens = []
         for user_id in payload["selected_ids"]:
             # add a new invite object into the database to notify the user of his invites
             token = FCMToken.objects.get(user_id=user_id).device_token
             tokens.append(token)
 
-        result = push_service.notify_multiple_devices(registration_ids=tokens,
-                                                      message_title="New Invite",
-                                                      message_body=messageBody,
-                                                      sound="job-done.m4r",
-                                                      badge=1)
-        return HttpResponse(json.dumps({"response": True}), content_type="application/json")
+        push_service.notify_multiple_devices(registration_ids=tokens,
+                                             message_title="New Invite",
+                                             message_body=message_body,
+                                             sound="job-done.m4r",
+                                             badge=1)
+
+                                             
+        return HttpResponse(json.dumps({"response": True}),
+                            content_type="application/json")
     

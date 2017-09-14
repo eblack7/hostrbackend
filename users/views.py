@@ -179,10 +179,15 @@ def get_user_data(request):
 
 @csrf_exempt
 def get_stats(request):
+    '''
+    This view gets the current users stats
+    request-arguments:
+        user_id
+    '''
     following = Follower.objects.filter(user_id=request.GET.get("id")).count()
     followers = Follower.objects.filter(friend_id=request.GET.get("id")).count()
-    return HttpResponse(json.dumps({
-        "followers": followers,
-        "following": following
-    }),
-        content_type="application/json")
+
+
+    return HttpResponse(json.dumps({"followers": followers, \
+                        "following": following}),
+                        content_type="application/json")

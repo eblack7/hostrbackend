@@ -3,7 +3,7 @@ from . import views
 urlpatterns = [
     url(r'^$', views.index),
     url(r'^create_event/', views.createEvent),
-    url(r'event_feed/', views.eventFeed),
+    url(r'event_feed/', views.event_feed),
     url(r'chat_notification/', views.chat_notification),
     url(r'is_attendee/', views.is_attendee),
     url(r'attend/', views.attend),
@@ -13,7 +13,7 @@ urlpatterns = [
     url(r'get_items/', views.get_items),
     url(r'checklist_item_state/', views.change_checklist_item_state),
     url(r'delete_item/', views.deleteItem),
-    url(r'new_send_notif/', views.new_send_notification),
+    #url(r'new_send_notif/', views.new_send_notification),
     url(r'my_events/', views.my_events),
     url(r'list_attendees/', views.list_attendees),
     url(r'update_event', views.update_event),
