@@ -191,3 +191,43 @@ def get_stats(request):
     return HttpResponse(json.dumps({"followers": followers, \
                         "following": following}),
                         content_type="application/json")
+
+
+@csrf_exempt
+def get_network(request):
+    '''
+    request-arguments:
+        user_id
+    '''
+    if request.method == 'POST':
+        payload = json.loads(request.body)
+        user_id = payload['user_id']
+        
+        # Get followers
+        followers = Follower.objects.filter(user_id=user_id) \
+                    .order_by('-created_at')
+
+        # Get following
+        following = Follower.objects.filter(friend_id=user_id) \
+                    .order_by('-created_at')
+
+        response = {
+            "followers": [],
+            "following": []
+        }
+
+        for user in followers:
+            response["followers"].append(
+                json.loads(serializers.serialize("json", [user.friend])[1:-1])
+            )
+
+        for user in following:
+            response["following"].append(
+                json.loads(serializers.serialize("json", [user.user])[1:-1])
+            )
+
+        return HttpResponse(json.dumps(response),
+                            content_type="application/json")
+
+    return HttpResponse(json.dumps({"error": "invalid request type."}),
+                        content_type="application/json")

@@ -13,4 +13,5 @@ urlpatterns = [
     url(r'^get_data/', views.get_user_data),
     url(r'^stats/', views.get_stats),
     url(r'^get_score/', views.get_score),
+    url(r'^get_network/', views.get_network),
 ]
