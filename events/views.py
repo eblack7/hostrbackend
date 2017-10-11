@@ -291,7 +291,6 @@ def cancel_attendee(request):
         return HttpResponse(json.dumps({"response": True}),
                             content_type="application/json")
 
-
 @csrf_exempt
 def edit_chat_notifications(request):
     """

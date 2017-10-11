@@ -58,7 +58,11 @@ def signUp(request):
         gender = request.POST.get('gender')
         #birthday = datetime.strptime(request.POST.get('birthday'), '%m/%d/%Y').date()
         phone_number = ""
-        username = email.split('@')[0]
+        try:
+            username = email.split('@')[0]
+        except AttributeError:
+            username = "none"
+            email = "none"
 
         new_user = User(username=username, full_name=full_name, email=email,
                         profile_picture_url=profile_picture_url,
