@@ -406,29 +406,6 @@ def deleteItem(request):
         item.delete()
         return HttpResponse(json.dumps({'response': True}), content_type="application/json")
 
-# @csrf_exempt
-# def new_send_notification(request):
-#     device_tokens = list()
-#     for token in FCMToken.objects.filter(user_id=6):
-#         device_tokens.append(token.device_token)
-
-#     message_data = {
-#         "device_tokens": device_tokens,
-#         "message_payload": {
-#             "title": "Message Title",
-#             "body": "Message Body"
-#         }
-#     }
-#     # headers = {'Content-type': 'application/json'}
-#     try:
-#         r = post("http://localhost:8080/send_not", data=json.dumps(message_data))
-#     except:
-#         return HttpResponse(json.dumps({'error': 'please try later.'}),
-#                             content_type="application/json")
-
-
-#     return HttpResponse(r.content)
-
 @csrf_exempt
 def my_events(request):
     '''

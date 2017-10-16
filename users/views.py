@@ -112,6 +112,10 @@ def updateProfile(request):
 
 @csrf_exempt
 def get_or_create_fcm_tokens(request):
+    '''
+    request-args:
+        request - Default django HttpRequest Object
+    '''
     if request.method == 'POST':
         Id = request.POST.get('id')
         device_token = request.POST.get('device_token')

@@ -18,6 +18,7 @@ from django.contrib import admin
 from polls.views import index
 import users
 import events
+import rideshare
 from . import views
 
 urlpatterns = [
@@ -26,5 +27,6 @@ urlpatterns = [
     url(r'^users/', include('users.urls')),
     url(r'^events/', include('events.urls')),
     url(r'^search/', include('search.urls')),
+    url(r'^rideshare/', include('rideshare.urls')),
     url(r'^privacy/', views.privacy),
 ]
