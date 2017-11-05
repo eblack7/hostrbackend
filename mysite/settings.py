@@ -60,7 +60,6 @@ INSTALLED_APPS = (
     'users',
     'events',
     'search',
-    'rideshare',
 )
 
 MIDDLEWARE_CLASSES = (

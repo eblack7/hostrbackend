@@ -13,7 +13,6 @@ from django.core import serializers
 from pyfcm import FCMNotification
 from django.db.models import F
 from django.utils import timezone
-#from requests import get, post
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from users.models import User, FCMToken, Follower
@@ -61,9 +60,8 @@ def createEvent(request):
         address = request.POST.get('address')
         latitude = float(request.POST.get('latitude'))
         longitude = float(request.POST.get('longitude'))
-        is_private = bool(request.POST.get('is_private'))
+        is_private = bool(int(request.POST.get('is_private')))
         event_image_url = request.POST.get('image_url')
-
         # Creating new event
         event = Event.objects.create(event_name=event_name, hoster=hoster,
                                      from_timestamp=from_timestamp,
@@ -454,15 +452,6 @@ def list_invitees(request):
                 invitees.append(
                     json.loads(serializers.serialize("json", [follower.user])[1:-1])
                 )
-        # followings = Follower.objects.filter(user_id=user_id)
-        # for i, following in enumerate(followings):
-        #     if following in followers:
-        #         del followings[i]
-
-        # for following in followings:
-        #     invitees.append(
-        #         json.loads(serializers.serialize("json", [following.friend])[1:-1])
-        #     )
 
         return HttpResponse(json.dumps(invitees), content_type="application/json")
 

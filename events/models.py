@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.db import models
 from base64 import b64encode, b64decode
 
+
 # Create your models here.
 class Event(models.Model):
     event_name = models.CharField(max_length=1024)
@@ -29,7 +30,6 @@ class Event(models.Model):
         ordering = ['-create_at']
 
 
-
 class Attendee(models.Model):
     event = models.ForeignKey('Event')
     user = models.ForeignKey('users.User')
@@ -43,6 +43,7 @@ class Attendee(models.Model):
     def __repr__(self):
         return "Attendee: {} - \"{}\" ".format(self.user.full_name, self.event.event_name)
 
+
 class ChecklistItem(models.Model):
     event = models.ForeignKey('Event')
     user = models.ForeignKey('users.User', blank=True, null=True)
@@ -55,6 +56,7 @@ class ChecklistItem(models.Model):
 
     def __repr__(self):
         return b64decode(self.item_name)
+
 
 class Invite(models.Model):
     event = models.ForeignKey('Event', related_name="invite_event")

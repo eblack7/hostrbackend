@@ -13,7 +13,6 @@ urlpatterns = [
     url(r'get_items/', views.get_items),
     url(r'checklist_item_state/', views.change_checklist_item_state),
     url(r'delete_item/', views.deleteItem),
-    #url(r'new_send_notif/', views.new_send_notification),
     url(r'my_events/', views.my_events),
     url(r'list_attendees/', views.list_attendees),
     url(r'update_event', views.update_event),

@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import json
+from datetime import datetime
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
-import json
-from .models import User
-from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime
 from .models import User, FCMToken, Follower
 
 
