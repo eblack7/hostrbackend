@@ -13,3 +13,4 @@ requests==2.14.2
 requests-toolbelt==0.8.0
 rsa==3.4.2
 six==1.10.0
+gunicorn==19.3.0
