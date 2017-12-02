@@ -47,9 +47,9 @@ def index(request):
 
 @csrf_exempt
 def createEvent(request):
-    '''
+    """
     This view creates the entire event and saves the instance to the database
-    '''
+    """
     if request.method == 'POST':
         print request.POST.get
         event_name = request.POST.get('event_name')

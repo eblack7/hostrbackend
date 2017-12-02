@@ -3,13 +3,20 @@ All Rideshare Django views in this file.
 """
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from django.http import HttpResponse
+from django.views.generic import View
 
-# Create your views here.
-def index(request):
+class RideView(View):
     """
-    A place holder index view for django
+    RideView for rideshare service
     """
-    print request
-    return HttpResponse("Ride share.",
-                        content_type="application/json")
+    def get(self, request):
+        """
+        GET request
+        """
+        pass
+
+    def post(self, request):
+        """
+        POST request
+        """
+        pass
