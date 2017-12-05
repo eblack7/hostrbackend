@@ -1,17 +1,3 @@
-# Copyright 2015 Google Inc. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 """
 Django settings for mysite project.
 
@@ -65,7 +51,6 @@ INSTALLED_APPS = (
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -73,7 +58,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.security.SecurityMiddleware',
 )
 
-ROOT_URLCONF = 'mysite.urls'
+ROOT_URLCONF = 'hostr.urls'
 
 TEMPLATES = [
     {
@@ -91,7 +76,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'mysite.wsgi.application'
+WSGI_APPLICATION = 'hostr.wsgi.application'
 
 
 # Database
@@ -111,20 +96,13 @@ if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine'):
         }
     }
 else:
-    # Running locally so connect to either a local MySQL instance or connect to
-    # Cloud SQL via the proxy. To start the proxy via command line:
-    #
-    #     $ ./cloud_sql_proxy -instances=hostrdev:us-central1:hostrdb=tcp:3306
-    #
-    # See https://cloud.google.com/sql/docs/mysql-connect-proxy
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
             'HOST': '127.0.0.1',
-            'PORT': '3307',
             'NAME': 'hostr',
             'USER': 'root',
-            'PASSWORD': '1234',
+            'PASSWORD': '',
         }
     }
 # [END db_setup]

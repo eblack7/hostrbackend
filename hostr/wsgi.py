@@ -12,21 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.conf.urls import include, url
-from django.contrib import admin
+"""
+WSGI config for mysite project.
 
-from polls.views import index
-import users
-import events
-import rideshare
-from . import views
+It exposes the WSGI callable as a module-level variable named ``application``.
 
-urlpatterns = [
-    url(r'^$', index),
-    url(r'^admin/', include(admin.site.urls)),
-    url(r'^users/', include('users.urls')),
-    url(r'^events/', include('events.urls')),
-    url(r'^search/', include('search.urls')),
-    url(r'^rideshare/', include('rideshare.urls')),
-    url(r'^privacy/', views.privacy),
-]
+For more information on this file, see
+https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/
+"""
+
+import os
+
+from django.core.wsgi import get_wsgi_application
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "hostr.settings")
+
+application = get_wsgi_application()
