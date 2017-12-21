@@ -24,7 +24,7 @@ class EventSerializer():
             output['to_timestamp'] = datetime.strftime(event.to_timestamp, DATE_FORMATTER)
             output['price'] = float(event.price)
             output['currency'] = str(event.currency)
-            output['address'] = str(event.address)
+            output['address'] = event.address
             output['attending'] = int(event.attending)
             output['latitude'] = float(event.latitude)
             output['longitude'] = float(event.longitude)
@@ -45,7 +45,7 @@ class EventSerializer():
             output['to_timestamp'] = datetime.strftime(event.to_timestamp, DATE_FORMATTER)
             output['price'] = float(event.price)
             output['currency'] = str(event.currency)
-            output['address'] = str(event.address)
+            output['address'] = event.address
             output['attending'] = int(event.attending)
             output['latitude'] = float(event.latitude)
             output['longitude'] = float(event.longitude)
