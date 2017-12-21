@@ -1,0 +1,51 @@
+{% extends "./base.html" %}
+{% load static %}
+
+{% block header %}
+    {{ block.super }}
+    <title>SystemZ Login</title>
+    <link rel="stylesheet" href="{% static 'css/cover.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="site-wrapper">
+
+            <div class="site-wrapper-inner">
+    
+            <div class="cover-container">
+    
+                <header class="masthead clearfix">
+                <div class="inner">
+                    <h3 class="masthead-brand">Hostr SystemZ</h3>
+                </div>
+                </header>
+                
+                <h4>Login</h4>
+                <main role="main" class="inner cover">
+                    <form action="{% url 'systemz_login' %}" method="POST">
+                        <div class="row col-md-6">
+                            <input type="text" autocomplete="off" name="username" class="form-control" placeholder="SystemZ Username"/>
+                        </div>
+                        <br />
+                        <div class="row col-md-6">
+                            <input type="password" name="password" class="form-control" placeholder="SystemZ Password"/>
+                        </div>
+                        <br />
+                        <div class="row col-md-6">
+                            <center><input type="submit" name="submit" value="Login" class="btn btn-primary" /></center>
+                        </div>
+                    </form>
+                </main>
+    
+                <footer class="mastfoot">
+                <div class="inner">
+                    
+                </div>
+                </footer>
+    
+            </div>
+    
+            </div>
+    
+    </div>
+{% endblock %}

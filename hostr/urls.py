@@ -15,8 +15,9 @@ urlpatterns = [
     url(r'^users/', include('users.urls')),
     url(r'^events/', include('events.urls')),
     url(r'^search/', include('search.urls')),
+    url(r'^system/', include('system.urls')),
     url(r'^privacy/', views.privacy),
-    
+   
     # Favicon RedirectView
     url(r'^favicon.ico$',
         RedirectView.as_view(url=staticfiles_storage.url('favicon.ico'),

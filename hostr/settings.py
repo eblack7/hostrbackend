@@ -46,6 +46,7 @@ INSTALLED_APPS = (
     'users',
     'events',
     'search',
+    'system',
 )
 
 MIDDLEWARE_CLASSES = (
