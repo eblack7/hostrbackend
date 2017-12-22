@@ -2,10 +2,18 @@
 {% load static %}
 
 {% block header %}
+    <title>Dashboard - Systemz</title>
     {{ block.super }}
 {% endblock %}
 
 
 {% block content %}
-    <p>Welcome</p>
+    <a href="{% url 'systemz_logout' %}">Logout</a> <br />
+
+    {% for event in events %}
+        <a href="{% url 'systemz_event_detail' id=event.pk %}">
+            {{ event.event_name }}<br />
+        </a>
+    {% endfor %}
+
 {% endblock %}
