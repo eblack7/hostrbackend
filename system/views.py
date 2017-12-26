@@ -2,10 +2,10 @@
 from __future__ import unicode_literals
 
 from django.shortcuts import redirect
-from django.contrib.auth import authenticate, login, logout
+from django.views.generic import View, TemplateView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-from django.views.generic import View, TemplateView
+from django.contrib.auth import authenticate, login, logout
 
 from events.models import Event
 # Create your views here.
