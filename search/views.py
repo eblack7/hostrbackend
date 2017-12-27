@@ -2,13 +2,13 @@
 from __future__ import unicode_literals
 
 import json
-from django.shortcuts import render
-from django.http import HttpResponse
+
 from django.core import serializers
-from events.utils import EventSerializer
-from events.models import Event
-from users.models import User
-from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+from django.views import generic
+
+import events
+import users
 
 
 # Create your views here.
@@ -19,32 +19,21 @@ def index():
     return HttpResponse(json.dumps({'response': 'index route'}),
                         content_type="application/json")
 
-@csrf_exempt
-def search_events(request):
-    '''
-    request-parameters:
-        search_query: a string query for searching through events table
-    '''
-    if request.method == 'POST':
+class SearchEvents(generic.View):
+    """ search for events in database. """
+    def post(self, request):
+        """ Runs when a POST request is sent to the search application. """
         payload = json.loads(request.body)
-        events = Event.objects.filter(event_name__search=payload['search_query'])
-        return HttpResponse(EventSerializer.serialize(events), content_type="application/json")
+        search_events = events.models.Event.objects \
+                                    .filter(event_name__search=payload['search_query'])
+        return HttpResponse(events.utils.EventSerializer.serialize(search_events),
+                            content_type="application/json")
 
-
-    return HttpResponse(json.dumps({'error': 'invalid request type.'}),
-                        content_type="application/json")
-
-@csrf_exempt
-def search_users(request):
-    '''
-    request-parameters:
-        search_query: a string query for searching through users table
-    '''
-    if request.method == 'POST':
+class SearchUsers(generic.View):
+    """ search for users in database. """
+    def post(self, request):
+        """ runs when a post request is sent to the search application. """
         payload = json.loads(request.body)
-        users = User.objects.filter(full_name__search=payload['search_query'])
-        return HttpResponse(serializers.serialize("json", users), content_type="application/json")
-
-
-    return HttpResponse(json.dumps({'error': 'invalid request type.'}),
-                        content_type="application/json")
+        search_users = users.models.User.objects.filter(full_name__search=payload['search_query'])
+        return HttpResponse(serializers.serialize("json", search_users),
+                            content_type="application/json")
