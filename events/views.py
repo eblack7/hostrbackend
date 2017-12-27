@@ -336,7 +336,7 @@ def new_checklist_item(request):
         event = Event.objects.get(pk=event_id)
         attendees = Attendee.objects.filter(event=event)
         fcm_tokens = [FCMToken.objects.get(user=a.user).device_token for a in attendees]
-        message_body = "New Item \"{}\" added to Checklist".format(item_name)
+        message_body = "New Item \"{}\" added to Checklist".format(base64.b64decode(item_name))
         PUSH_SERVICE \
             .notify_multiple_devices(registration_ids=fcm_tokens,
                                      message_title=event.event_name,
