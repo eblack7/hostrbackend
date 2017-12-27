@@ -332,6 +332,17 @@ def new_checklist_item(request):
         item_name = base64.b64encode(request.POST.get('item_name').encode('utf-8'))
         new_item = ChecklistItem.objects.create(event_id=event_id,
                                                 item_name=item_name)
+        #Send notification regarding new CheckListItem
+        event = Event.objects.get(pk=event_id)
+        attendees = Attendee.objects.filter(event=event)
+        fcm_tokens = [FCMToken.objects.get(user=a.user).device_token for a in attendees]
+        message_body = "New Item \"{}\" added to Checklist".format(item_name)
+        PUSH_SERVICE \
+            .notify_multiple_devices(registration_ids=fcm_tokens,
+                                     message_title=event.event_name,
+                                     message_body=message_body,
+                                     sound="job-done.m4r",
+                                     badge=1)
         return HttpResponse(serializers.serialize("json", [new_item])[1:-1],
                             content_type="application/json")
 
