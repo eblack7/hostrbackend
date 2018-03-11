@@ -51,7 +51,7 @@ def createEvent(request):
     This view creates the entire event and saves the instance to the database
     """
     if request.method == 'POST':
-        print request.POST.get
+        print (request.POST.get)
         event_name = request.POST.get('event_name')
         hoster = User.objects.get(pk=request.POST.get('hoster_info'))
         from_timestamp = datetime.strptime(request.POST.get('start_timestamp'),
@@ -65,10 +65,12 @@ def createEvent(request):
         longitude = float(request.POST.get('longitude'))
         is_private = bool(int(request.POST.get('is_private')))
         event_image_url = request.POST.get('image_url')
+        description = request.POST.get('description') #Added after v1 release
         # Creating new event
         event = Event.objects.create(event_name=event_name, hoster=hoster,
                                      from_timestamp=from_timestamp,
                                      to_timestamp=to_timestamp,
+                                     description=description,
                                      price=price,
                                      currency=currency,
                                      address=address, latitude=latitude,
@@ -101,11 +103,11 @@ def update_event(request):
         event_id = request.POST.get('event_id')
         event = get_object_or_404(Event, pk=event_id)
 
-        print request.POST.get
+        print (request.POST.get)
 
         event_name = request.POST.get('event_name')
         hoster = User.objects.get(pk=request.POST.get('hoster_info'))
-        print hoster.full_name
+        print (hoster.full_name)
         from_timestamp = datetime.strptime(request.POST.get('start_timestamp'),
                                            DATE_FORMATTER)
         to_timestamp = datetime.strptime(request.POST.get('end_timestamp'),
@@ -115,6 +117,7 @@ def update_event(request):
         address = request.POST.get('address')
         latitude = float(request.POST.get('latitude'))
         longitude = float(request.POST.get('longitude'))
+        description = request.POST.get('description')
         event_image_url = request.POST.get('image_url')
         is_private = request.POST.get('is_private')
 
@@ -122,6 +125,7 @@ def update_event(request):
         event.event_name = event_name
         event.from_timestamp = from_timestamp
         event.to_timestamp = to_timestamp
+        event.description = description
         event.address = address
         event.price = price
         event.currency = currency
@@ -156,7 +160,7 @@ def event_feed(request):
     '''
     # user_id = request.POST.get('user_id')
     # getting all events except the ones that are over
-    print '{}'.format(request.body)
+    print ('{}'.format(request.body))
     now = timezone.now()
     events = Event.objects.exclude(to_timestamp__lt=now) \
                   .exclude(is_private=True) \
@@ -309,7 +313,7 @@ def edit_chat_notifications(request):
     if event_id and user_id and notif_flag is not None:
         attendee = Attendee.objects.get(event_id=event_id, user_id=user_id)
         attendee.chat_notification = notif_flag
-        print attendee.save()
+        print (attendee.save())
 
 
         return HttpResponse(json.dumps({"response": notif_flag}),
@@ -360,9 +364,9 @@ def change_checklist_item_state(request):
         @itemFlag (boolean)
     '''
     if request.method == 'POST':
-        print request.POST
+        print (request.POST)
         payload = json.loads(request.body)
-        print payload
+        print (payload)
         item_id = payload["item_id"]
         user_id = payload["user_id"]
         item = ChecklistItem.objects.get(pk=item_id)
@@ -455,7 +459,7 @@ def list_invitees(request):
     given user """
     if request.method == 'GET':
         event_id = request.GET.get("event_id")
-        print 'Listing invitees for: {}'.format(event_id)
+        print ('Listing invitees for: {}'.format(event_id))
         user_id = request.GET.get("user_id")
 
         invitees = []

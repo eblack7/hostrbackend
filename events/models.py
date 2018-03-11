@@ -9,6 +9,7 @@ from base64 import b64encode, b64decode
 class Event(models.Model):
     event_name = models.CharField(max_length=1024)
     hoster = models.ForeignKey('users.User')
+    description = models.TextField(default=None, blank=True, null=True)
     from_timestamp = models.DateTimeField(auto_now_add=False)
     to_timestamp = models.DateTimeField(auto_now_add=False)
     price = models.DecimalField(max_digits=19, decimal_places=10)

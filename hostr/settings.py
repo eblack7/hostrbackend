@@ -99,11 +99,8 @@ if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine'):
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'HOST': '127.0.0.1',
-            'NAME': 'hostr',
-            'USER': 'root',
-            'PASSWORD': '',
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'hostr.db'
         }
     }
 # [END db_setup]
